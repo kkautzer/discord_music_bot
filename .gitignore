@@ -4,3 +4,4 @@ package.json
 package-lock.json
 .vscode
 constants.json
+data.json

@@ -1,9 +1,20 @@
+import subprocess
 import os
 import discord
-import js2py 
 # from dotenv import load_dotenv
 
-print("\n\nSTEP 1\n")
-js2py.run_file("spotify.js")
-print("\nSTEP 3")
+def main():
+    authenticate()
     
+    while(True):
+        update()  
+    
+if __name__ == "__main__":
+    main()
+    
+    
+def authenticate():
+    subprocess.call(["node", "auth.cjs"])
+    
+def update():
+    subprocess.call(["node", "update.cjs"])

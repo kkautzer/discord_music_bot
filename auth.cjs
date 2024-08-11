@@ -3,19 +3,22 @@ var request = require('request');
 var querystring = require('querystring');
 var fs = require('fs');
 
+
 const app = express();
 app.use(express.static(__dirname));
 
-const client_id = "de71666388a34499a1e7e1e590e1d14d";
-const client_secret = "e3d7bcc8bf9a410c85f8fec1703e9d2e";
-const redirect_uri = "http://localhost:3800/";
+const client_id = "your-client-id";
+const client_secret = "your-client-secret";
+const redirect_uri = "your-redirect-uri";
 var code = null;
-
+const PORT = "your-port-num"
 var at = null;
 var rt = null;
 
 defineHandlingToEndpoints();
-app.listen('3800');
+var server = app.listen(PORT, () => {
+    require('child_process').exec("start "+redirect_uri+"login");
+});
 
 
 function defineHandlingToEndpoints() {
@@ -98,10 +101,26 @@ function defineHandlingToEndpoints() {
     });
 
     app.get("/success", function(req, res) { // action to take on successful token retrieval
-        populateJSON(at);
-        
+        const data = {
+            "access_token":at,
+            "refresh_token":rt
+        };
+
+        var jsonData = JSON.stringify(data);
+
+        try {
+            fs.writeFileSync("./constants.json", jsonData)
+            console.log("Token Information wrote to JSON.");
+        } catch (exception) {
+            console.log("Failed to write token data to JSON!\n\n***")
+            console.log(exception);
+        }
+
+        res.redirect(redirect_uri+"auth_complete.html")            
+        server.close((error) => { console.log("Web Server Closed.")});
     });
 }
+
 
 /**
  * 
@@ -114,46 +133,7 @@ function getRefreshToken() {}
  * @param {*} info JSON data containing all Spotify song information from an API request. This 
  * must include the user-read-currently-playing scope 
  */
-function populateJSON(info) {
-    var options = {
-        url: "https://api.spotify.com/v1/me/player/currently-playing",
-        headers: { "Authorization": "Bearer " + at},
-        json: true
-    }
-    
-    // make API web call
-    request.get(options, function(error, response, body) {
-       if (error) {
-            console.log("Error retrieving data!");
-            return null;
-        } else {
-            var artists = "";
-            for (var i = 0; i<body.item.artists.length; i++ ) {
-                artists += body.item.artists[i].name;
-                if (i+1 != body.item.artists.length) {
-                    artists += ", ";
-                }
-            }
-        
-            const data = {
-                "name":body.item.name,
-                "artists": artists,
-                "album": body.item.album.name,
-                "album_cov": body.item.album.images[2].url,
-                "album_release": body.item.album.release_date,
-                "progress": Math.floor(body.progress_ms / 1000),
-                "dur": Math.floor(body.item.duration_ms / 1000)
-            };
-        
-            var jsonData = JSON.stringify(data); // create JSON format data
-            
-            console.log(jsonData);
-        
-        }
-      
-
-    });
-}
+function updateJSON(token) {}
 
 function generateRandomString(length) {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"

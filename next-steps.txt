@@ -1,4 +1,0 @@
-- implement refresh token functionality and detection in update.cjs
-- begin implementation of basic discord frontend displaying basic information about the current song
-    - similar format as spotify-profile-demo.js
-- add ability to connect user accounts to the bot, which projects audio to its channel

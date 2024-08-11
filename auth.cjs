@@ -2,6 +2,7 @@ var express = require('express');
 var request = require('request');
 var querystring = require('querystring');
 var fs = require('fs');
+const { timeStamp, time } = require('console');
 
 
 const app = express();
@@ -102,8 +103,11 @@ function defineHandlingToEndpoints() {
 
     app.get("/success", function(req, res) { // action to take on successful token retrieval
         const data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
             "access_token":at,
-            "refresh_token":rt
+            "refresh_token":rt,
+            "access_token_retrieved": Math.floor(Date.now() / 1000)
         };
 
         var jsonData = JSON.stringify(data);

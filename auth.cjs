@@ -120,24 +120,18 @@ function defineHandlingToEndpoints() {
             console.log(exception);
         }
 
-        res.redirect(redirect_uri+"auth_complete.html")            
-        server.close((error) => { console.log("Web Server Closed.")});
+        res.redirect(redirect_uri+"auth_complete.html")
+
+        server.close((error) => {
+            if (error) {
+                console.log("Error attempting to close web server:")
+                console.log(error)
+            } else {
+                console.log("Web Server Closed.")
+            }
+        });
     });
 }
-
-
-/**
- * 
- * @return a refresh token that can be used to continue retrieving data after access token expiration 
- */
-function getRefreshToken() {}
-
-/**
- * Populates a JSON file with necessary display information regarding the currently playing song
- * @param {*} info JSON data containing all Spotify song information from an API request. This 
- * must include the user-read-currently-playing scope 
- */
-function updateJSON(token) {}
 
 function generateRandomString(length) {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"

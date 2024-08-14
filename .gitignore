@@ -5,3 +5,6 @@ package-lock.json
 .vscode
 constants.json
 data.json
+next-steps.txt
+discord-test.py
+.env

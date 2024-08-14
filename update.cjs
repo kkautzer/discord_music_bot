@@ -80,6 +80,8 @@ if (token != null && refresh != null) {
             console.log("Error retrieving data!");
             return null;
         } else {
+            console.log("**********");
+            console.log(body);
             var artists = "";
             for (var i = 0; i<body.item.artists.length; i++ ) {
                 artists += body.item.artists[i].name;
@@ -94,8 +96,9 @@ if (token != null && refresh != null) {
                 "album": body.item.album.name,
                 "album_cov": body.item.album.images[2].url,
                 "album_release": body.item.album.release_date,
-                "progress": Math.floor(body.progress_ms / 1000),
-                "dur": Math.floor(body.item.duration_ms / 1000)
+                "progress": body.progress_ms,
+                "dur": body.item.duration_ms,
+                "url":body.item.preview_url // replace w/ 30sec preview to test
             };
         
             var jsonData = JSON.stringify(data); // create JSON format data        

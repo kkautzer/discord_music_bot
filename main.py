@@ -68,10 +68,15 @@ async def play_current(ctx):
     if (not vc):
         await join_vc(ctx)
     global info
-    vc.play(discord.FFmpegPCMAudio(source=info["url"]))
+    vc.play(discord.FFmpegPCMAudio(source=info["preview-url"]))
     vc.source = discord.PCMVolumeTransformer(vc.source)
     vc.source.volume = 1.0
-
+@bot.command(name="link")
+async def get_link(ctx):
+    await update_data(ctx)
+    global info
+    await ctx.send(info["song-url"])
+    
 @bot.command(name="connect")
 async def connect_acct(ctx):
     subprocess.call(["node", "auth.cjs"])

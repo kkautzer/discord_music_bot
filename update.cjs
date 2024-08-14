@@ -98,7 +98,8 @@ if (token != null && refresh != null) {
                 "album_release": body.item.album.release_date,
                 "progress": body.progress_ms,
                 "dur": body.item.duration_ms,
-                "url":body.item.preview_url // replace w/ 30sec preview to test
+                "preview-url":body.item.preview_url,
+                "song-url": body.item.external_urls.spotify
             };
         
             var jsonData = JSON.stringify(data); // create JSON format data        

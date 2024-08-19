@@ -2,8 +2,6 @@ var express = require('express');
 var request = require('request');
 var querystring = require('querystring');
 var fs = require('fs');
-const { timeStamp, time } = require('console');
-
 
 const app = express();
 app.use(express.static(__dirname));

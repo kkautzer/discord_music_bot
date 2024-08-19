@@ -2,6 +2,7 @@ import subprocess
 import math
 import json
 import os
+import time
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv    
@@ -18,8 +19,6 @@ async def update_data(ctx):
     global info
     info = json.load(f) # convert json file to python dict
     f.close() # close json file
-
-
    
 # setup & initialize bot
 load_dotenv()
@@ -29,7 +28,38 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="--", intents=intents)
 client = discord.Client(intents=intents)
 info = {}
+current_song = None
 vc = False
+
+
+
+## CREATE CUSTOM EVENT HANDLER LOOP
+@bot.command(name="start")
+async def event_loop(ctx):
+    while(True):  
+        await update_data(ctx)
+        global info
+        global current_song
+        if (current_song != info["preview-url"]):
+            await on_song_change(ctx)
+    
+@bot.event
+async def on_song_change(ctx):
+    global info
+    global current_song
+    current_song = info["preview-url"]
+   
+    progress_s = math.floor(info["progress"] / 1000)
+    duration_s = math.floor(info["dur"] / 1000)
+    progress = str(math.floor(progress_s / 60)) + ":" + str(progress_s % 60).zfill(2)
+    duration = str(math.floor(duration_s / 60)) + ":" + str(duration_s % 60).zfill(2)
+
+   
+    msg = (
+        f'Now playing \'{info["name"]}\' by {info["artists"]}' +
+        f' ({progress} of {duration})\n{info["song-url"]}'    
+    ) 
+    await ctx.send(msg)    
 
 # CREATE COMMANDS 
 @bot.command(name="song")

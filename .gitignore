@@ -3,3 +3,5 @@ package.json
 package-lock.json
 .vscode
 .env
+__pycache__
+src/__pycache__

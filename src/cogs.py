@@ -16,14 +16,16 @@ class Cogs:
         @commands.Cog.listener()
         async def on_ready(self):
             self.stream_loop.start()
+            print("Bot is ready!")
         
         ### ADD THE FOLLOWING LOOP TO EXECUTION FLOW
         @tasks.loop(seconds=1.0)
         async def stream_loop(self):
-            if Cogs.stream_ctx: # if stream_ctx is not empty
-                await self.update_data()
-                if (Cogs.current_song != Cogs.info["preview-url"]):
-                    await Cogs.CurrentSongAndAlbum.on_song_change(self)
+            await self.update_data()
+                        
+            # if stream_ctx not empty and current song is different than indicated
+            if Cogs.stream_ctx and Cogs.current_song != Cogs.info["id"]:
+                await Cogs.CurrentSongAndAlbum.on_song_change(self)
 
         # called when authorization to spotify acct required   
         @commands.command(name="init")
@@ -63,7 +65,7 @@ class Cogs:
         async def update_data(self):
             if not Cogs.authorized: return
             subprocess.call(["node", "update.cjs"])
-            f = open("./data.json") # open json file containing current song data
+            f = open("./data.json", encoding="utf_16_le") # open json file containing current song data
             Cogs.info = json.load(f) # convert json file to python dict
             f.close() # close json file
 
@@ -150,7 +152,7 @@ class Cogs:
         
         async def on_song_change(self):
             info = Cogs.info
-            Cogs.current_song = info["preview-url"]
+            Cogs.current_song = info["id"]
             progress_s = math.floor(info["progress"] / 1000)
             duration_s = math.floor(info["dur"] / 1000)
             progress = str(math.floor(progress_s / 60)) + ":" + str(progress_s % 60).zfill(2)
@@ -158,6 +160,6 @@ class Cogs:
             msg = (
                 f'----\n**{time.ctime(time.time())}**\nNow playing \'{info["name"]}\' by {info["artists"]}' +
                 f' ({progress} of {duration})\n{info["song-url"]}'    
-            ) 
+            )
             for ctx in Cogs.stream_ctx.values():
                 await ctx.send(msg)

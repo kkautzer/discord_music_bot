@@ -1,6 +1,7 @@
 var express = require('express');
 var request = require('request');
 var fs = require("fs");
+const { toUnicode } = require('punycode');
 
 var token = null;
 var refresh = null;
@@ -50,7 +51,7 @@ if (3600 - (Math.floor(Date.now() / 1000) - data.access_token_retrieved) <= 15) 
             var jsonData = JSON.stringify(updatedData);
 
             try {
-                fs.writeFileSync("./constants.json", jsonData);
+                fs.writeFileSync("./constants.json", jsonData, {encoding: "utf-16le"});
                 console.log("Successfully generated new access token!");
             } catch(exception) {
                 console.log("Failed to write token data to JSON!\n\n***")
@@ -80,9 +81,7 @@ if (token != null && refresh != null) {
             console.log("Error retrieving data!");
             return null;
         } else {
-            console.log("**********");
-            console.log(body);
-
+            console.log( "Successfully updated data - " + new Date(Date.now()).toString());
             var artists = "";
             for (var i = 0; i<body.item.artists.length; i++ ) {
                 artists += body.item.artists[i].name;
@@ -92,6 +91,7 @@ if (token != null && refresh != null) {
             }
         
             const data = {
+                "id":body.item.id,
                 "name":body.item.name,
                 "artists": artists,
                 "album": body.item.album.name,
@@ -103,12 +103,12 @@ if (token != null && refresh != null) {
                 "preview-url":body.item.preview_url,
                 "song-url": body.item.external_urls.spotify
             };
-        
+
             var jsonData = JSON.stringify(data); // create JSON format data        
         }
         
         try {
-            fs.writeFileSync("./data.json", jsonData)
+            fs.writeFileSync("./data.json", jsonData, {encoding: "utf-16le"})
         } catch (exception) {
             console.log("Failed to write data to JSON file!\n\n***")
             console.log(exception);

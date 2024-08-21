@@ -9,7 +9,7 @@ class Cogs:
     authorized = False
     info = {}
     current_song = None
-    vc = False
+    vc = {}
     stream_ctx = {}
     
     class Initialization(commands.Cog):
@@ -76,12 +76,12 @@ class Cogs:
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
-            print(ctx.message.guild.voice_channels)
             for channel in ctx.message.guild.voice_channels:
                 if channel.name == "Music Previews":
-                    Cogs.vc = await channel.connect()
-                    return
+                    Cogs.vc[ctx.guild.id] = await channel.connect()
+                    return True
             await ctx.send("Could not find voice channel named \'Music Previews\' in this server.")
+            return False
                     
         @commands.command(name="leave-voice")
         async def leave_vc(self, ctx):
@@ -89,18 +89,28 @@ class Cogs:
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
             await ctx.voice_client.disconnect()
-            Cogs.vc = False
+            Cogs.vc[ctx.guild.id] = False
         @commands.command(name="play")
         async def play_current(self, ctx):
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
-            vc = Cogs.vc
-            if (not vc):
-                await Cogs.Initialization.join_vc(self, ctx)
+
+            if (ctx.guild.id not in Cogs.vc):
+                if not await self.join_vc(ctx): # add this guild to vc dict
+                    await ctx.send("Failed to join this server's preview channel.")
+                    return
+            vc = Cogs.vc[ctx.guild.id] # get channel corresponding to this guild
+            if vc.is_playing():
+                vc.stop()
             vc.play(discord.FFmpegPCMAudio(source=Cogs.info["preview-url"]))
             vc.source = discord.PCMVolumeTransformer(vc.source)
             vc.source.volume = 1.0
+            
+            await ctx.send(
+                f"Now playing preview for \'{Cogs.info["name"]}\' by {Cogs.info["artists"]}...\n" +
+                f"{Cogs.info["song-url"]}"
+            )
 
     class CurrentSongAndAlbum(commands.Cog):
         @commands.command(name="song")

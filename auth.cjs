@@ -53,6 +53,15 @@ function defineHandlingToEndpoints() {
             querystring.stringify({
                 error: "state_mismatch"
             }));
+
+            server.close((error) => { // close web server
+                if (error) {
+                    console.log("Error attempting to close web server:")
+                    console.log(error)
+                } else {
+                    console.log("Web Server Closed.")
+                }
+            });
         } else {
             var authOptions = {
                 url: 'https://accounts.spotify.com/api/token',
@@ -92,6 +101,15 @@ function defineHandlingToEndpoints() {
                     console.log("Error occured while retrieving access token!")
                     console.log(error); // error.status provides error #
                     res.redirect("#" + querystring.stringify({error: "invalid_token"}));
+
+                    server.close((error) => { // close web server
+                        if (error) {
+                            console.log("Error attempting to close web server:")
+                            console.log(error)
+                        } else {
+                            console.log("Web Server Closed.")
+                        }
+                    });
                 }
             });
 
@@ -111,16 +129,15 @@ function defineHandlingToEndpoints() {
         var jsonData = JSON.stringify(data);
 
         try {
-            fs.writeFileSync("./constants.json", jsonData)
+            fs.writeFileSync("./data/constants.json", jsonData)
             console.log("Token Information wrote to JSON.");
+            res.redirect(redirect_uri+"auth_complete.html")
         } catch (exception) {
             console.log("Failed to write token data to JSON!\n\n***")
             console.log(exception);
         }
 
-        res.redirect(redirect_uri+"auth_complete.html")
-
-        server.close((error) => {
+        server.close((error) => { // close web server
             if (error) {
                 console.log("Error attempting to close web server:")
                 console.log(error)

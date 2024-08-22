@@ -1,7 +1,6 @@
 var express = require('express');
 var request = require('request');
 var fs = require("fs");
-const { toUnicode } = require('punycode');
 
 var token = null;
 var refresh = null;
@@ -80,8 +79,16 @@ if (token != null && refresh != null) {
         if (error) {
             console.log("Error retrieving data!");
             return null;
+        } else if (body == null) {
+            console.log("No song currently playing - writing null to json")
+            try {
+                fs.closeSync(fs.openSync("./data.json", "w"))
+            } catch (exception) {
+                console.log("Failed to write blank data to JSON file!\n***")
+                console.log(exception);
+                console.log("\n")
+            }
         } else {
-            console.log( "Successfully updated data - " + new Date(Date.now()).toString());
             var artists = "";
             for (var i = 0; i<body.item.artists.length; i++ ) {
                 artists += body.item.artists[i].name;
@@ -89,7 +96,7 @@ if (token != null && refresh != null) {
                     artists += ", ";
                 }
             }
-        
+            
             const data = {
                 "id":body.item.id,
                 "name":body.item.name,
@@ -103,19 +110,21 @@ if (token != null && refresh != null) {
                 "preview-url":body.item.preview_url,
                 "song-url": body.item.external_urls.spotify
             };
-
+            
             var jsonData = JSON.stringify(data); // create JSON format data        
+        
+            try {
+                fs.writeFileSync("./data.json", jsonData, {encoding: "utf-16le"})
+            } catch (exception) {
+                console.log("Failed to write data to JSON file!\n***")
+                console.log(exception);
+                console.log("\n")
+            }
+            console.log( "Successfully updated data - " + new Date(Date.now()).toString());
         }
         
-        try {
-            fs.writeFileSync("./data.json", jsonData, {encoding: "utf-16le"})
-        } catch (exception) {
-            console.log("Failed to write data to JSON file!\n\n***")
-            console.log(exception);
-        }
-
     });
-
+    
 } else {
     console.log("Access or Refresh token was null.")
 }

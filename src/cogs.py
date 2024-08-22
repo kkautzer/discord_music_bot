@@ -4,6 +4,7 @@ import json
 import math
 from discord.ext import commands, tasks
 import time
+import os
 
 class Cogs:
     authorized = False
@@ -24,7 +25,7 @@ class Cogs:
             await self.update_data()
                         
             # if stream_ctx not empty and current song is different than indicated
-            if Cogs.stream_ctx and Cogs.current_song != Cogs.info["id"]:
+            if Cogs.stream_ctx and Cogs.info != {} and Cogs.current_song != Cogs.info["id"]:
                 await Cogs.CurrentSongAndAlbum.on_song_change(self)
 
         # called when authorization to spotify acct required   
@@ -49,13 +50,12 @@ class Cogs:
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
-            
             try:
                 del Cogs.stream_ctx[ctx.guild.id] 
                 await ctx.send(
                     "Stream will no longer be sent to this server. To begin " +
                     "receiving live feed once again, call '-set-stream' in the" +
-                    "desired channel."
+                    " desired channel."
                 )
             except KeyError:
                 await ctx.send(
@@ -66,12 +66,15 @@ class Cogs:
             if not Cogs.authorized: return
             subprocess.call(["node", "update.cjs"])
             f = open("./data.json", encoding="utf_16_le") # open json file containing current song data
-            Cogs.info = json.load(f) # convert json file to python dict
+
+            if (os.stat("./data.json").st_size == 0):
+                Cogs.info = {}
+            else:
+                Cogs.info = json.load(f) # convert json file to python dict
             f.close() # close json file
 
     class VoiceAndPreviews(commands.Cog):
         ## voice commands / song preview commands
-        @commands.command(name="join-voice")
         async def join_vc(self, ctx):
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
@@ -88,14 +91,20 @@ class Cogs:
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
+            if ctx.guild.id not in Cogs.vc:
+                await ctx.send("Bot is not currently in a voice channel!")
+                return
             await ctx.voice_client.disconnect()
-            Cogs.vc[ctx.guild.id] = False
+            del Cogs.vc[ctx.guild.id]
         @commands.command(name="play")
         async def play_current(self, ctx):
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
-
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
+                return
+            
             if (ctx.guild.id not in Cogs.vc):
                 if not await self.join_vc(ctx): # add this guild to vc dict
                     await ctx.send("Failed to join this server's preview channel.")
@@ -118,6 +127,9 @@ class Cogs:
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
                 return
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
+                return
             # format progress and duration for frontend display
             info = Cogs.info
             # convert milliseconds to minutes:seconds
@@ -133,34 +145,54 @@ class Cogs:
             
         @commands.command(name="slink")
         async def get_slink(self,ctx):
+            # prerequisites
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
+                return
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
                 return
             await ctx.send(Cogs.info["song-url"])
         @commands.command(name="alink")
         async def get_alink(self, ctx):
+            # prerequisites
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
+                return
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
                 return
             await ctx.send(Cogs.info["album_url"])
         @commands.command(name="released")
         async def get_release(self,ctx):
+            # prerequisites (authorized and playing a song)
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
+                return
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
                 return
             info = Cogs.info
             msg = f'\'{info["name"]}\' by {info["artists"]} was released on {info["release"]}'
             await ctx.send(msg)
         @commands.command(name="album")
         async def get_album(self,ctx):
+            # prerequisites
             if not Cogs.authorized: 
                 await ctx.send("Please authorize an account using '-init' before using commands!")
+                return
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
                 return
             info = Cogs.info
             msg = f'\'{info["name"]}\' by {info["artists"]} is from \'{info["album"]}\'\n{info["album_url"]}'
             await ctx.send(msg)
         
         async def on_song_change(self):
+            if Cogs.info == {}:
+                await ctx.send("No song currently playing!")
+                return
+            
             info = Cogs.info
             Cogs.current_song = info["id"]
             progress_s = math.floor(info["progress"] / 1000)

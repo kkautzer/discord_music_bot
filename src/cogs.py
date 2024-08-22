@@ -65,9 +65,9 @@ class Cogs:
         async def update_data(self):
             if not Cogs.authorized: return
             subprocess.call(["node", "update.cjs"])
-            f = open("./data.json", encoding="utf_16_le") # open json file containing current song data
+            f = open("./data/data.json", encoding="utf_16_le") # open json file containing current song data
 
-            if (os.stat("./data.json").st_size == 0):
+            if (os.stat("./data/data.json").st_size == 0):
                 Cogs.info = {}
             else:
                 Cogs.info = json.load(f) # convert json file to python dict

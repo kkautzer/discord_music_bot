@@ -6,7 +6,7 @@ var token = null;
 var refresh = null;
 
 // get at and rt values
-data = JSON.parse(fs.readFileSync("./constants.json"));
+data = JSON.parse(fs.readFileSync("./data/constants.json"));
 
 token = data.access_token;
 refresh = data.refresh_token;
@@ -50,7 +50,7 @@ if (3600 - (Math.floor(Date.now() / 1000) - data.access_token_retrieved) <= 15) 
             var jsonData = JSON.stringify(updatedData);
 
             try {
-                fs.writeFileSync("./constants.json", jsonData, {encoding: "utf-16le"});
+                fs.writeFileSync("./data/constants.json", jsonData, {encoding: "utf-16le"});
                 console.log("Successfully generated new access token!");
             } catch(exception) {
                 console.log("Failed to write token data to JSON!\n\n***")
@@ -82,7 +82,7 @@ if (token != null && refresh != null) {
         } else if (body == null) {
             console.log("No song currently playing - writing null to json")
             try {
-                fs.closeSync(fs.openSync("./data.json", "w"))
+                fs.closeSync(fs.openSync("./data/data.json", "w"))
             } catch (exception) {
                 console.log("Failed to write blank data to JSON file!\n***")
                 console.log(exception);
@@ -114,7 +114,7 @@ if (token != null && refresh != null) {
             var jsonData = JSON.stringify(data); // create JSON format data        
         
             try {
-                fs.writeFileSync("./data.json", jsonData, {encoding: "utf-16le"})
+                fs.writeFileSync("./data/data.json", jsonData, {encoding: "utf-16le"})
             } catch (exception) {
                 console.log("Failed to write data to JSON file!\n***")
                 console.log(exception);

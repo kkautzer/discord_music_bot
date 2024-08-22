@@ -45,6 +45,7 @@ class Cogs:
                 await self.connect_acct(ctx)
             Cogs.stream_ctx[ctx.guild.id] = ctx
             await ctx.send("Successfully updated stream location!")
+            
         @commands.command(name="stop-stream")
         async def stop_stream(self, ctx):
             if not Cogs.authorized: 

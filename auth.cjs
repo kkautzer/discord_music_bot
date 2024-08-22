@@ -6,11 +6,12 @@ var fs = require('fs');
 const app = express();
 app.use(express.static(__dirname));
 
-const client_id = "your-client-id";
-const client_secret = "your-client-secret";
-const redirect_uri = "your-redirect-uri";
+const client_id = process.env.CLIENT_ID;
+const client_secret = process.env.CLIENT_SECRET;
+const redirect_uri = process.env.REDIRECT_URI;
+const PORT = process.env.PORT
+
 var code = null;
-const PORT = "your-port-num"
 var at = null;
 var rt = null;
 
@@ -79,7 +80,6 @@ function defineHandlingToEndpoints() {
 
             // make call to retrieve access token and refresh token
             request.post(authOptions, function(error, response, body) {
-
                 if (!error) { // if no errors occur in process
                     at = body.access_token;
                     rt = body.refresh_token;
@@ -93,9 +93,8 @@ function defineHandlingToEndpoints() {
                     // make API web call
                     request.get(options, function(error, response, body) {
                        if (error) { console.log("Error retrieving access token!"); }
+                       else { res.redirect(redirect_uri+"success"); }
                     });
-
-                    res.redirect(redirect_uri+"success");
 
                 } else { // error occurs when retrieving access token
                     console.log("Error occured while retrieving access token!")

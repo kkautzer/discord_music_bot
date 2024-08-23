@@ -6,14 +6,15 @@ var token = null;
 var refresh = null;
 
 // get at and rt values
-data = JSON.parse(fs.readFileSync("./data/constants.json"));
+rdata = fs.readFileSync("./data/constants.json")
+data = JSON.parse(rdata)
 
 token = data.access_token;
 refresh = data.refresh_token;
 
 // if token is within fifteen seconds of expiring, request a new one
 if (3600 - (Math.floor(Date.now() / 1000) - data.access_token_retrieved) <= 15) { // change to 15 after confirmed working
-    
+    console.log("Access token is expired!");
     var client_id = data.client_id;
     var client_secret = data.client_secret;
 
@@ -45,19 +46,19 @@ if (3600 - (Math.floor(Date.now() / 1000) - data.access_token_retrieved) <= 15) 
                 "access_token_retrieved": Math.floor(Date.now() / 1000),
                 "client_id": client_id,
                 "client_secret": client_secret
-            }
+            };
 
             var jsonData = JSON.stringify(updatedData);
 
             try {
-                fs.writeFileSync("./data/constants.json", jsonData, {encoding: "utf-16le"});
+                fs.writeFileSync("./data/constants.json", jsonData);
                 console.log("Successfully generated new access token!");
             } catch(exception) {
                 console.log("Failed to write token data to JSON!\n\n***")
                 console.log(exception);                            
             }
         } else { // error case
-            console.log("Failed to retrieve refreshed access token.");
+            console.log("Failed to refresh access token.");
             console.log(error);
 
         }
@@ -79,7 +80,7 @@ if (token != null && refresh != null) {
         if (error) {
             console.log("Error retrieving data!");
             return null;
-        } else if (body == null) {
+        } else if (body == null || body.currently_playing_type != "track") {
             console.log("No song currently playing - writing null to json")
             try {
                 fs.closeSync(fs.openSync("./data/data.json", "w"))
@@ -89,6 +90,11 @@ if (token != null && refresh != null) {
                 console.log("\n")
             }
         } else {
+
+            // // // // console.log("***********")
+            // // // // console.log(body)
+            // // // // console.log("***********")
+
             var artists = "";
             for (var i = 0; i<body.item.artists.length; i++ ) {
                 artists += body.item.artists[i].name;

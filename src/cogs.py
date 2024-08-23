@@ -20,7 +20,7 @@ class Cogs:
             print("Bot is ready!")
         
         ### ADD THE FOLLOWING LOOP TO EXECUTION FLOW
-        @tasks.loop(seconds=1.0)
+        @tasks.loop(seconds=0.4)
         async def stream_loop(self):
             await self.update_data()
                         
@@ -31,14 +31,21 @@ class Cogs:
         # called when authorization to spotify acct required   
         @commands.command(name="init")
         async def connect_acct(self, ctx):
-            subprocess.call(["node", "auth.cjs"])
-            Cogs.authorized = True
-            await ctx.send(
-                "Successfully connected Spotify account" +
-                "\nCall '-set-stream' in the preferred channel to " +
-                "set / update the stream output location or '-stop-stream' " +
-                "in any channel to stop receiving live updates."
-            )
+            try:
+                subprocess.call(["node", "auth.cjs"], timeout=75)
+                Cogs.authorized = True
+                await ctx.send(
+                    "Successfully connected Spotify account" +
+                    "\nCall '-set-stream' in the preferred channel to " +
+                    "set / update the stream output location or '-stop-stream' " +
+                    "in any channel to stop receiving live updates."
+                )
+            except subprocess.TimeoutExpired:
+                Cogs.authorized = False
+                await ctx.send(
+                    "Timeout while attempting to connect Spotify account." +
+                    "Please try calling '-init' again."
+                )
         @commands.command(name="set-stream")
         async def set_stream(self, ctx):
             if not Cogs.authorized: 
@@ -65,15 +72,18 @@ class Cogs:
                 )
         async def update_data(self):
             if not Cogs.authorized: return
-            subprocess.call(["node", "update.cjs"])
-            f = open("./data/data.json", encoding="utf_16_le") # open json file containing current song data
+            try:
+                subprocess.call(["node", "update.cjs"], timeout=7) # if takes longer than 15s, timeout reached
+                f = open("./data/data.json", encoding="utf_16_le") # open json file containing current song data
 
-            if (os.stat("./data/data.json").st_size == 0):
+                if (os.stat("./data/data.json").st_size == 0):
+                    Cogs.info = {}
+                else:
+                    Cogs.info = json.load(f) # convert json file to python dict
+                f.close() # close json file
+            except subprocess.TimeoutExpired:
                 Cogs.info = {}
-            else:
-                Cogs.info = json.load(f) # convert json file to python dict
-            f.close() # close json file
-
+                print("Timeout while attempting to update data.")
     class VoiceAndPreviews(commands.Cog):
         ## voice commands / song preview commands
         async def join_vc(self, ctx):
